@@ -1,0 +1,9 @@
+{
+  "name": "Banco de Ejercicios C.B.R.V",
+  "short_name": "C.B.R.V",
+  "start_url": "/drills",
+  "display": "standalone",
+  "background_color": "#044AB1",
+  "theme_color": "#044AB1",
+  "icons": [{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }]
+}
