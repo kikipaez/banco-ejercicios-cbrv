@@ -1,132 +1,91 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { baseUsernameFromName, isValidPin, normalizeUsername, pinToPassword, usernameToEmail } from "@/lib/pin-auth";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [
-      { title: "Iniciar sesión — Banco de Ejercicios C.B.R.V" },
-      { name: "description", content: "Acceso de entrenadores al Banco de Ejercicios C.B.R.V." },
-      { property: "og:title", content: "Iniciar sesión — Banco de Ejercicios C.B.R.V" },
-      { property: "og:description", content: "Acceso de entrenadores al Banco de Ejercicios C.B.R.V." },
-    ],
-  }),
   component: AuthPage,
 });
 
 function AuthPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"in" | "up">("in");
-  const [username, setUsername] = useState("");
-  const [pin, setPin] = useState("");
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
 
-  async function submit(e: React.FormEvent) {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValidPin(pin)) return void toast.error("El PIN debe tener 4 números");
-    setBusy(true);
+    setLoading(true);
+    setError(null);
+
     try {
-      let user = normalizeUsername(username);
-      if (mode === "up") {
-        const base = baseUsernameFromName(name);
-        if (base.length < 2) throw new Error("Escribe tu nombre y apellido");
-        const { data: next, error: rpcErr } = await supabase.rpc("next_username", { _base: base });
-        if (rpcErr || !next) throw new Error("No se pudo generar el usuario");
-        user = next;
-      } else if (user.length < 3) {
-        throw new Error("El usuario debe tener al menos 3 letras o números");
-      }
-      const email = usernameToEmail(user);
-      const password = pinToPassword(pin);
-      if (mode === "in") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw new Error("Usuario o PIN incorrectos");
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        alert("¡Cuenta creada con éxito! Ya puedes iniciar sesión.");
+        setIsSignUp(false);
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: name, username: user } },
-        });
-        if (error) {
-          throw new Error(/registered|exists/i.test(error.message) ? "Ese usuario ya existe" : error.message);
-        }
-        if (!data.session) throw new Error("No se pudo crear la cuenta");
-        toast.success(`Tu usuario es: ${user}`, { description: "Apúntalo para entrar la próxima vez.", duration: 10000 });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        navigate({ to: "/" });
       }
-      navigate({ to: "/drills" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Algo ha fallado");
+    } catch (err: any) {
+      setError(err.message);
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <img src="/icon-512.png" alt="" width={64} height={64} className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-glow" />
-          <h1 className="text-3xl font-bold">Banco de Ejercicios C.B.R.V</h1>
-          <p className="mt-1 text-muted-foreground">Solo entrenadores</p>
-        </div>
-        <form onSubmit={submit} className="space-y-4 rounded-xl border bg-card p-6">
-          {mode === "up" && (
-            <div className="space-y-1.5">
-              <Label htmlFor="name">Nombre y apellido</Label>
-              <Input id="name" className="h-12" required placeholder="ej. Enrique Páez" value={name} onChange={(e) => setName(e.target.value)} />
-              {baseUsernameFromName(name).length >= 2 && (
-                <p className="text-sm text-muted-foreground">
-                  Tu usuario será <span className="font-semibold text-foreground">{baseUsernameFromName(name)}</span> (con un número si ya existe)
-                </p>
-              )}
-            </div>
-          )}
-          {mode === "in" && (
-          <div className="space-y-1.5">
-            <Label htmlFor="user">Usuario</Label>
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4">
+      <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6 text-slate-100 shadow-xl">
+        <h2 className="mb-2 text-center text-2xl font-bold">Banco de Ejercicios C.B.R.V</h2>
+        <p className="mb-6 text-center text-sm text-slate-400">Solo entrenadores</p>
+
+        {error && <div className="mb-4 rounded bg-red-950 p-3 text-sm text-red-200">{error}</div>}
+
+        <form onSubmit={handleAuth} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium">Correo electrónico</label>
             <Input
-              id="user"
-              className="h-12"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              autoCapitalize="none"
-              autoCorrect="off"
-              placeholder="ej. jlopez"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="entrenador@cbrv.es"
+              className="border-slate-700 bg-slate-800"
             />
           </div>
-          )}
-          <div className="space-y-1.5">
-            <Label htmlFor="pin">PIN (4 números)</Label>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Contraseña</label>
             <Input
-              id="pin"
               type="password"
-              inputMode="numeric"
-              pattern="[0-9]{4}"
-              maxLength={4}
-              className="h-12 text-center text-2xl tracking-[0.6em]"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              placeholder="••••••••"
+              className="border-slate-700 bg-slate-800"
             />
           </div>
-          <Button type="submit" className="h-12 w-full text-base font-semibold" disabled={busy}>
-            {mode === "in" ? "Entrar" : "Crear cuenta"}
+
+          <Button type="submit" className="w-full bg-amber-400 font-semibold text-slate-950 hover:bg-amber-500" disabled={loading}>
+            {loading ? "Procesando..." : isSignUp ? "Crear cuenta" : "Entrar"}
           </Button>
+        </form>
+
+        <div className="mt-4 text-center">
           <button
             type="button"
-            className="w-full text-sm text-muted-foreground hover:text-foreground"
-            onClick={() => setMode(mode === "in" ? "up" : "in")}
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-sm text-amber-400 hover:underline"
           >
-            {mode === "in" ? "¿Entrenador nuevo? Crea una cuenta" : "¿Ya tienes cuenta? Entra"}
+            {isSignUp ? "¿Ya tienes cuenta? Entra" : "¿No tienes cuenta? Regístrate"}
           </button>
-        </form>
+        </div>
       </div>
     </div>
   );
