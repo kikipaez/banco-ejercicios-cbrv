@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AGE_GROUPS, CATEGORIES, DIFFICULTIES, t } from "@/lib/drills";
 import { getYouTubeId } from "@/lib/youtube";
 import { Pill, VideoEmbed } from "./drill-ui";
+import { BasketballWhiteboard } from "./BasketballWhiteboard";
+import { Pencil } from "lucide-react";
 
 const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
@@ -98,6 +100,7 @@ export function UploadDrillDialog({ open, onOpenChange }: { open: boolean; onOpe
   const [execution, setExecution] = useState("");
   const [points, setPoints] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [whiteboardOpen, setWhiteboardOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const videoId = getYouTubeId(url);
@@ -174,128 +177,156 @@ export function UploadDrillDialog({ open, onOpenChange }: { open: boolean; onOpe
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Subir nuevo ejercicio</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <Field label="Título del ejercicio">
-            <Input className="h-11" required value={title} onChange={(e) => setTitle(e.target.value)} />
-          </Field>
-          <Field label="Enlace de YouTube (oculto o Shorts)">
-            <Input
-              className="h-11"
-              required
-              placeholder="https://youtu.be/... o youtube.com/shorts/..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-            />
-            {url &&
-              (videoId ? (
-                <div className="mt-2">
-                  <VideoEmbed url={url} title="Vista previa" />
-                </div>
-              ) : (
-                <p className="mt-1 text-sm text-destructive">Eso no parece un enlace de YouTube válido.</p>
-              ))}
-          </Field>
-          <Field label="Categorías de edad">
-            <div className="flex flex-wrap gap-2">
-              {AGE_GROUPS.map((a) => (
-                <Pill key={a} active={ages.includes(a)} onClick={() => setAges(toggle(ages, a))}>
-                  {t(a)}
-                </Pill>
-              ))}
-            </div>
-          </Field>
-          <Field label="Tipo de ejercicio">
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <Pill key={c} active={cats.includes(c)} onClick={() => setCats(toggle(cats, c))}>
-                  {t(c)}
-                </Pill>
-              ))}
-            </div>
-          </Field>
-          <Field label="Dificultad">
-            <div className="flex flex-wrap gap-2">
-              {DIFFICULTIES.map((d) => (
-                <Pill key={d} active={difficulty === d} onClick={() => setDifficulty(d)}>
-                  {t(d)}
-                </Pill>
-              ))}
-            </div>
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Duración (min)">
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={120}
-                className="h-11"
-                value={durationInput}
-                onChange={(e) => setDurationInput(e.target.value)}
-              />
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Subir nuevo ejercicio</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submit} className="space-y-4">
+            <Field label="Título del ejercicio">
+              <Input className="h-11" required value={title} onChange={(e) => setTitle(e.target.value)} />
             </Field>
-            <Field label="Jugadores necesarios">
+            <Field label="Enlace de YouTube (oculto o Shorts)">
               <Input
                 className="h-11"
-                placeholder="ej. 8 (4c4)"
-                value={players}
-                onChange={(e) => setPlayers(e.target.value)}
+                required
+                placeholder="https://youtu.be/... o youtube.com/shorts/..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
               />
+              {url &&
+                (videoId ? (
+                  <div className="mt-2">
+                    <VideoEmbed url={url} title="Vista previa" />
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-destructive">Eso no parece un enlace de YouTube válido.</p>
+                ))}
             </Field>
-          </div>
-          <p className="text-xs text-muted-foreground">Un punto por línea: cada línea será una viñeta.</p>
-          <Field label="Organización">
-            <Textarea rows={3} value={setup} onChange={(e) => setSetup(e.target.value)} />
-          </Field>
-          <Field label="Desarrollo">
-            <Textarea rows={3} value={execution} onChange={(e) => setExecution(e.target.value)} />
-          </Field>
-          <Field label="Puntos clave">
-            <Textarea rows={3} value={points} onChange={(e) => setPoints(e.target.value)} />
-          </Field>
-          <Field label="Diagrama de pista (PDF o foto de pizarra)">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf,image/*"
-              className="hidden"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 flex-1 justify-start truncate font-normal"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {file ? file.name : "Elegir PDF o hacer foto…"}
-              </Button>
-              {file && (
+            <Field label="Categorías de edad">
+              <div className="flex flex-wrap gap-2">
+                {AGE_GROUPS.map((a) => (
+                  <Pill key={a} active={ages.includes(a)} onClick={() => setAges(toggle(ages, a))}>
+                    {t(a)}
+                  </Pill>
+                ))}
+              </div>
+            </Field>
+            <Field label="Tipo de ejercicio">
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((c) => (
+                  <Pill key={c} active={cats.includes(c)} onClick={() => setCats(toggle(cats, c))}>
+                    {t(c)}
+                  </Pill>
+                ))}
+              </div>
+            </Field>
+            <Field label="Dificultad">
+              <div className="flex flex-wrap gap-2">
+                {DIFFICULTIES.map((d) => (
+                  <Pill key={d} active={difficulty === d} onClick={() => setDifficulty(d)}>
+                    {t(d)}
+                  </Pill>
+                ))}
+              </div>
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Duración (min)">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={120}
+                  className="h-11"
+                  value={durationInput}
+                  onChange={(e) => setDurationInput(e.target.value)}
+                />
+              </Field>
+              <Field label="Jugadores necesarios">
+                <Input
+                  className="h-11"
+                  placeholder="ej. 8 (4c4)"
+                  value={players}
+                  onChange={(e) => setPlayers(e.target.value)}
+                />
+              </Field>
+            </div>
+            <p className="text-xs text-muted-foreground">Un punto por línea: cada línea será una viñeta.</p>
+            <Field label="Organización">
+              <Textarea rows={3} value={setup} onChange={(e) => setSetup(e.target.value)} />
+            </Field>
+            <Field label="Desarrollo">
+              <Textarea rows={3} value={execution} onChange={(e) => setExecution(e.target.value)} />
+            </Field>
+            <Field label="Puntos clave">
+              <Textarea rows={3} value={points} onChange={(e) => setPoints(e.target.value)} />
+            </Field>
+            <Field label="Diagrama de pista (PDF, foto o Pizarra Táctica)">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf,image/*"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+              <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant="ghost"
-                  className="h-11 px-3 text-destructive"
-                  onClick={() => {
-                    setFile(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
+                  variant="outline"
+                  className="h-11 flex-1 justify-start truncate font-normal"
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  Quitar
+                  {file ? file.name : "Elegir PDF o hacer foto…"}
                 </Button>
-              )}
-            </div>
-          </Field>
-          <Button type="submit" className="h-12 w-full text-base font-semibold" disabled={busy}>
-            {busy ? "Subiendo…" : "Subir ejercicio"}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-11 gap-1"
+                  onClick={() => setWhiteboardOpen(true)}
+                >
+                  <Pencil className="h-4 w-4" /> Dibujar en Pizarra
+                </Button>
+                {file && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-11 px-3 text-destructive"
+                    onClick={() => {
+                      setFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  >
+                    Quitar
+                  </Button>
+                )}
+              </div>
+            </Field>
+            <Button type="submit" className="h-12 w-full text-base font-semibold" disabled={busy}>
+              {busy ? "Subiendo…" : "Subir ejercicio"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={whiteboardOpen} onOpenChange={setWhiteboardOpen}>
+        <DialogContent className="max-w-2xl p-4">
+          <DialogHeader>
+            <DialogTitle>Pizarra Táctica C.B.R.V</DialogTitle>
+          </DialogHeader>
+          <BasketballWhiteboard
+            onSave={async (dataUrl) => {
+              const res = await fetch(dataUrl);
+              const blob = await res.blob();
+              const whiteboardFile = new File([blob], `pizarra-${Date.now()}.png`, { type: "image/png" });
+              setFile(whiteboardFile);
+              setWhiteboardOpen(false);
+              toast.success("¡Diagrama de pizarra guardado para este ejercicio!");
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
