@@ -12,6 +12,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,17 +22,24 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setMessage(null);
 
     try {
-      if (isSignUp) {
+      if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/auth',
+        });
+        if (error) throw error;
+        setMessage("¡Correo de recuperación enviado! Revisa tu bandeja de entrada.");
+      } else if (isSignUp) {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        alert("¡Cuenta creada con éxito! Ya puedes iniciar sesión.");
+        setMessage("¡Cuenta creada con éxito! Ya puedes iniciar sesión.");
         setIsSignUp(false);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/" });
+        navigate({ to: "/drills" });
       }
     } catch (err: any) {
       setError(err.message);
@@ -46,6 +55,7 @@ function AuthPage() {
         <p className="mb-6 text-center text-sm text-slate-400">Solo entrenadores</p>
 
         {error && <div className="mb-4 rounded bg-red-950 p-3 text-sm text-red-200">{error}</div>}
+        {message && <div className="mb-4 rounded bg-emerald-950 p-3 text-sm text-emerald-200">{message}</div>}
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
@@ -60,30 +70,46 @@ function AuthPage() {
             />
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">Contraseña</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className="border-slate-700 bg-slate-800"
-            />
-          </div>
+          {!isForgotPassword && (
+            <div>
+              <label className="mb-1 block text-sm font-medium">Contraseña</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className="border-slate-700 bg-slate-800"
+              />
+            </div>
+          )}
 
           <Button type="submit" className="w-full bg-amber-400 font-semibold text-slate-950 hover:bg-amber-500" disabled={loading}>
-            {loading ? "Procesando..." : isSignUp ? "Crear cuenta" : "Entrar"}
+            {loading ? "Procesando..." : isForgotPassword ? "Enviar instrucciones" : isSignUp ? "Crear cuenta" : "Entrar"}
           </Button>
         </form>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 flex flex-col items-center space-y-2 text-sm">
+          {!isForgotPassword && (
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-amber-400 hover:underline"
+            >
+              {isSignUp ? "¿Ya tienes cuenta? Entra" : "¿No tienes cuenta? Regístrate"}
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-amber-400 hover:underline"
+            onClick={() => {
+              setIsForgotPassword(!isForgotPassword);
+              setError(null);
+              setMessage(null);
+            }}
+            className="text-slate-400 hover:underline"
           >
-            {isSignUp ? "¿Ya tienes cuenta? Entra" : "¿No tienes cuenta? Regístrate"}
+            {isForgotPassword ? "Volver al login" : "¿Has olvidado tu contraseña?"}
           </button>
         </div>
       </div>
