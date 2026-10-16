@@ -25,7 +25,6 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
   const width = 600;
   const height = 350;
 
-  // Redraw court and freehand drawing layer
   useEffect(() => {
     redrawCanvas();
   }, [courtType, tokens]);
@@ -41,33 +40,68 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
     ctx.fillRect(0, 0, width, height);
 
     if (courtType !== "blank") {
-      ctx.strokeStyle = "#475569";
+      ctx.strokeStyle = "#94a3b8";
       ctx.lineWidth = 2;
 
       if (courtType === "half") {
-        // Half court lines
-        ctx.strokeRect(50, 10, width - 100, height - 20); // court boundary
+        // Half court lines (Vertical orientation relative to basket at top)
+        ctx.strokeRect(50, 20, width - 100, height - 40);
         // 3-point arc
         ctx.beginPath();
         ctx.arc(width / 2, 20, 140, 0, Math.PI);
         ctx.stroke();
         // Key / Paint
-        ctx.strokeRect(width / 2 - 40, 20, 80, 120);
-        // Free throw semicircle
+        ctx.strokeRect(width / 2 - 45, 20, 90, 130);
+        // Free throw semicircle (solid & dashed simulation)
         ctx.beginPath();
-        ctx.arc(width / 2, 140, 40, Math.PI, 0, true);
+        ctx.arc(width / 2, 150, 40, Math.PI, 0, false);
+        ctx.stroke();
+        // Basket hoop
+        ctx.beginPath();
+        ctx.arc(width / 2, 35, 12, 0, Math.PI * 2);
         ctx.stroke();
       } else if (courtType === "full") {
-        // Full court lines
-        ctx.strokeRect(20, 20, width - 40, height - 40);
-        // Half court line
+        // Full court outer boundary (Horizontal orientation)
+        const margin = 30;
+        ctx.strokeRect(margin, margin, width - margin * 2, height - margin * 2);
+
+        // Center line
         ctx.beginPath();
-        ctx.moveTo(width / 2, 20);
-        ctx.lineTo(width / 2, height - 20);
+        ctx.moveTo(width / 2, margin);
+        ctx.lineTo(width / 2, height - margin);
         ctx.stroke();
+
         // Center circle
         ctx.beginPath();
-        ctx.arc(width / 2, height / 2, 40, 0, Math.PI * 2);
+        ctx.arc(width / 2, height / 2, 35, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Left Key / Paint
+        const keyWidth = 100;
+        const keyHeight = 70;
+        ctx.strokeRect(margin, height / 2 - keyHeight / 2, keyWidth, keyHeight);
+
+        // Left Free throw arc
+        ctx.beginPath();
+        ctx.arc(margin + keyWidth, height / 2, 35, Math.PI * 1.5, Math.PI * 0.5, false);
+        ctx.stroke();
+
+        // Left Basket
+        ctx.beginPath();
+        ctx.arc(margin + 15, height / 2, 10, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Right Key / Paint
+        ctx.strokeRect(width - margin - keyWidth, height / 2 - keyHeight / 2, keyWidth, keyHeight);
+
+        // Right Free throw arc
+        ctx.beginPath();
+        ctx.arc(width - margin - keyWidth, height / 2, 35, Math.PI * 0.5, Math.PI * 1.5, false);
+        ctx.stroke();
+
+        // Right Basket
+        ctx.beginPath();
+        ctx.arc(width - margin - 15, height / 2, 10, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
@@ -76,7 +110,7 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
     tokens.forEach((token) => {
       ctx.beginPath();
       ctx.arc(token.x, token.y, 16, 0, Math.PI * 2);
-      ctx.fillStyle = token.type === "O" ? "#3b82f6" : "#ef4444"; // Blue for O, Red for X
+      ctx.fillStyle = token.type === "O" ? "#3b82f6" : "#ef4444";
       ctx.fill();
       ctx.lineWidth = 2;
       ctx.strokeStyle = "#ffffff";
@@ -106,12 +140,10 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
     const { x, y } = getCoordinates(e);
 
     if (tool === "token") {
-      // Check if clicking an existing token to drag
       const clickedToken = tokens.find((t) => Math.hypot(t.x - x, t.y - y) < 20);
       if (clickedToken) {
         setDraggingTokenId(clickedToken.id);
       } else {
-        // Place new token
         const newToken: Token = {
           id: crypto.randomUUID(),
           type: selectedTokenType,
