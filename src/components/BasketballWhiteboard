@@ -2,7 +2,11 @@ import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Eraser, Pencil, RotateCcw, Save } from "lucide-react";
 
-export function BasketballWhiteboard({ onSave }: { onSave: (dataUrl: string) => void }) {
+interface BasketballWhiteboardProps {
+  onSave: (dataUrl: string) => void;
+}
+
+export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<"pen" | "eraser">("pen");
