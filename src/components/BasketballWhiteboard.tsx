@@ -43,68 +43,65 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
       ctx.strokeStyle = "#94a3b8";
       ctx.lineWidth = 2;
 
+      const m = 30; // margin
+
       if (courtType === "half") {
-        const marginX = 80;
-        const topY = 20;
-        const bottomY = height - 20;
-        const courtWidth = width - marginX * 2;
+        // Half court: Left side is baseline/basket, Right side is half-court line
+        const courtW = width - m * 2;
+        const courtH = height - m * 2;
 
-        // Half court outer box (Baseline at top, Sidelines, Half-court line at bottom)
-        ctx.strokeRect(marginX, topY, courtWidth, bottomY - topY);
+        // Outer boundary
+        ctx.strokeRect(m, m, courtW, courtH);
 
-        const centerX = width / 2;
-        const keyWidth = 120;
-        const keyHeight = 110;
-
-        // Key / Paint (from top baseline downwards)
-        ctx.strokeRect(centerX - keyWidth / 2, topY, keyWidth, keyHeight);
-
-        // Free throw semicircle (facing down into the court)
+        // Half-court line & semi-circle on the right edge
         ctx.beginPath();
-        ctx.arc(centerX, topY + keyHeight, 45, 0, Math.PI, false);
-        ctx.stroke();
-
-        // Free throw dashed-style line simulation inside key
-        ctx.beginPath();
-        ctx.setLineDash([4, 4]);
-        ctx.arc(centerX, topY + keyHeight, 45, Math.PI, 0, false);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // 3-point arc
-        ctx.beginPath();
-        // Corner straight lines of 3pt line
-        ctx.moveTo(marginX + 20, topY);
-        ctx.lineTo(marginX + 20, topY + 50);
-        ctx.moveTo(width - marginX - 20, topY);
-        ctx.lineTo(width - marginX - 20, topY + 50);
-        // Arc
-        ctx.arc(centerX, topY + 15, 130, 0.15 * Math.PI, 0.85 * Math.PI, false);
-        ctx.stroke();
-
-        // Basket & Backboard
-        ctx.beginPath();
-        ctx.moveTo(centerX - 25, topY + 10);
-        ctx.lineTo(centerX + 25, topY + 10);
+        ctx.moveTo(width - m, m);
+        ctx.lineTo(width - m, height - m);
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(centerX, topY + 25, 10, 0, Math.PI * 2);
+        ctx.arc(width - m, height / 2, 35, Math.PI * 0.5, Math.PI * 1.5, false);
         ctx.stroke();
 
-        // Half court line at the bottom with center circle arc snippet
+        // Key / Paint (Rect on the left baseline)
+        const keyW = 110;
+        const keyH = 70;
+        ctx.strokeRect(m, height / 2 - keyH / 2, keyW, keyH);
+
+        // Free throw semi-circle (facing right)
         ctx.beginPath();
-        ctx.arc(centerX, bottomY, 40, Math.PI, 0, false);
+        ctx.arc(m + keyW, height / 2, 35, Math.PI * 1.5, Math.PI * 0.5, false);
+        ctx.stroke();
+
+        // Basket & Backboard on left baseline
+        ctx.beginPath();
+        ctx.moveTo(m + 10, height / 2 - 20);
+        ctx.lineTo(m + 10, height / 2 + 20);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(m + 22, height / 2, 8, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 3-point arc (Left side)
+        ctx.beginPath();
+        ctx.moveTo(m, height / 2 - 120);
+        ctx.lineTo(m + 50, height / 2 - 120);
+        ctx.arc(m, height / 2, 120, Math.PI * 1.5, Math.PI * 0.5, false);
+        ctx.lineTo(m, height / 2 + 120);
         ctx.stroke();
 
       } else if (courtType === "full") {
-        const margin = 30;
-        ctx.strokeRect(margin, margin, width - margin * 2, height - margin * 2);
+        const courtW = width - m * 2;
+        const courtH = height - m * 2;
+
+        // Outer boundary
+        ctx.strokeRect(m, m, courtW, courtH);
 
         // Center line
         ctx.beginPath();
-        ctx.moveTo(width / 2, margin);
-        ctx.lineTo(width / 2, height - margin);
+        ctx.moveTo(width / 2, m);
+        ctx.lineTo(width / 2, height - m);
         ctx.stroke();
 
         // Center circle
@@ -112,32 +109,41 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
         ctx.arc(width / 2, height / 2, 35, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Left Key / Paint
-        const keyWidth = 90;
-        const keyHeight = 70;
-        ctx.strokeRect(margin, height / 2 - keyHeight / 2, keyWidth, keyHeight);
+        const keyW = 90;
+        const keyH = 65;
 
-        // Left Free throw arc
+        // Left Key
+        ctx.strokeRect(m, height / 2 - keyH / 2, keyW, keyH);
         ctx.beginPath();
-        ctx.arc(margin + keyWidth, height / 2, 35, Math.PI * 1.5, Math.PI * 0.5, false);
+        ctx.arc(m + keyW, height / 2, 30, Math.PI * 1.5, Math.PI * 0.5, false);
         ctx.stroke();
-
         // Left Basket
         ctx.beginPath();
-        ctx.arc(margin + 15, height / 2, 10, 0, Math.PI * 2);
+        ctx.arc(m + 15, height / 2, 7, 0, Math.PI * 2);
         ctx.stroke();
-
-        // Right Key / Paint
-        ctx.strokeRect(width - margin - keyWidth, height / 2 - keyHeight / 2, keyWidth, keyHeight);
-
-        // Right Free throw arc
+        // Left 3pt arc
         ctx.beginPath();
-        ctx.arc(width - margin - keyWidth, height / 2, 35, Math.PI * 0.5, Math.PI * 1.5, false);
+        ctx.moveTo(m, height / 2 - 100);
+        ctx.lineTo(m + 30, height / 2 - 100);
+        ctx.arc(m, height / 2, 100, Math.PI * 1.5, Math.PI * 0.5, false);
+        ctx.lineTo(m, height / 2 + 100);
         ctx.stroke();
 
+        // Right Key
+        ctx.strokeRect(width - m - keyW, height / 2 - keyH / 2, keyW, keyH);
+        ctx.beginPath();
+        ctx.arc(width - m - keyW, height / 2, 30, Math.PI * 0.5, Math.PI * 1.5, false);
+        ctx.stroke();
         // Right Basket
         ctx.beginPath();
-        ctx.arc(width - margin - 15, height / 2, 10, 0, Math.PI * 2);
+        ctx.arc(width - m - 15, height / 2, 7, 0, Math.PI * 2);
+        ctx.stroke();
+        // Right 3pt arc
+        ctx.beginPath();
+        ctx.moveTo(width - m, height / 2 - 100);
+        ctx.lineTo(width - m - 30, height / 2 - 100);
+        ctx.arc(width - m, height / 2, 100, Math.PI * 0.5, Math.PI * 1.5, false);
+        ctx.lineTo(width - m, height / 2 + 100);
         ctx.stroke();
       }
     }
