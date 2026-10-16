@@ -22,8 +22,9 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [draggingTokenId, setDraggingTokenId] = useState<string | null>(null);
 
-  const width = 600;
-  const height = 350;
+  // Dynamic canvas dimensions based on mode
+  const width = courtType === "half" ? 420 : 640;
+  const height = courtType === "half" ? 560 : 360;
 
   useEffect(() => {
     redrawCanvas();
@@ -43,64 +44,63 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
       ctx.strokeStyle = "#94a3b8";
       ctx.lineWidth = 2;
 
-      const m = 35; // margin
+      const m = 30; // margin
 
       if (courtType === "half") {
-        // VERTICAL HALF COURT (Basket at top, half-court line at bottom)
+        // --- PORTRAIT / VERTICAL HALF COURT (Clipboard style) ---
         const courtW = width - m * 2;
         const courtH = height - m * 2;
         const centerX = width / 2;
 
-        // Outer boundary box
+        // Outer boundary
         ctx.strokeRect(m, m, courtW, courtH);
 
-        // Key / Paint (Rect at top baseline)
-        const keyW = 120;
-        const keyH = 90;
+        // Key / Paint at top baseline
+        const keyW = 110;
+        const keyH = 100;
         ctx.strokeRect(centerX - keyW / 2, m, keyW, keyH);
 
-        // Free throw semicircle (facing down into court)
+        // Free throw semicircle (solid & dashed)
         ctx.beginPath();
-        ctx.arc(centerX, m + keyH, 35, 0, Math.PI, false);
+        ctx.arc(centerX, m + keyH, 40, 0, Math.PI, false);
         ctx.stroke();
 
-        // Free throw dashed arc simulation
         ctx.beginPath();
         ctx.setLineDash([4, 4]);
-        ctx.arc(centerX, m + keyH, 35, Math.PI, 0, false);
+        ctx.arc(centerX, m + keyH, 40, Math.PI, 0, false);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Basket & Backboard
+        // Basket & Backboard at top
         ctx.beginPath();
-        ctx.moveTo(centerX - 25, m + 10);
-        ctx.lineTo(centerX + 25, m + 10);
+        ctx.moveTo(centerX - 24, m + 12);
+        ctx.lineTo(centerX + 24, m + 12);
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(centerX, m + 20, 8, 0, Math.PI * 2);
+        ctx.arc(centerX, m + 22, 7, 0, Math.PI * 2);
         ctx.stroke();
 
-        // 3-point arc (Top half court)
+        // 3-point arc (Vertical proportions)
         ctx.beginPath();
-        ctx.moveTo(m + 15, m);
-        ctx.lineTo(m + 15, m + 45);
-        ctx.arc(centerX, m + 20, 125, 0.15 * Math.PI, 0.85 * Math.PI, false);
-        ctx.lineTo(width - m - 15, m);
+        ctx.moveTo(m + 10, m);
+        ctx.lineTo(m + 10, m + 60);
+        ctx.arc(centerX, m + 22, 135, 0.12 * Math.PI, 0.88 * Math.PI, false);
+        ctx.lineTo(width - m - 10, m);
         ctx.stroke();
 
-        // Half-court line & center circle arc at the bottom boundary
+        // Half-court line & center circle at bottom boundary
         ctx.beginPath();
         ctx.moveTo(m, height - m);
         ctx.lineTo(width - m, height - m);
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(centerX, height - m, 35, Math.PI, 0, false);
+        ctx.arc(centerX, height - m, 40, Math.PI, 0, false);
         ctx.stroke();
 
       } else if (courtType === "full") {
-        // HORIZONTAL FULL COURT
+        // --- LANDSCAPE / HORIZONTAL FULL COURT ---
         const courtW = width - m * 2;
         const courtH = height - m * 2;
 
@@ -124,12 +124,11 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
         // Left Key & 3pt
         ctx.strokeRect(m, height / 2 - keyH / 2, keyW, keyH);
         ctx.beginPath();
-        ctx.arc(m + keyW, height / 2, 30, Math.PI * 1.5, Math.PI * 0.5, false);
+        ctx.arc(m + keyW, height / 2, 32, Math.PI * 1.5, Math.PI * 0.5, false);
         ctx.stroke();
         ctx.beginPath();
         ctx.arc(m + 15, height / 2, 7, 0, Math.PI * 2);
         ctx.stroke();
-        // Left 3pt arc
         ctx.beginPath();
         ctx.moveTo(m, height / 2 - 110);
         ctx.lineTo(m + 30, height / 2 - 110);
@@ -140,12 +139,11 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
         // Right Key & 3pt
         ctx.strokeRect(width - m - keyW, height / 2 - keyH / 2, keyW, keyH);
         ctx.beginPath();
-        ctx.arc(width - m - keyW, height / 2, 30, Math.PI * 0.5, Math.PI * 1.5, false);
+        ctx.arc(width - m - keyW, height / 2, 32, Math.PI * 0.5, Math.PI * 1.5, false);
         ctx.stroke();
         ctx.beginPath();
         ctx.arc(width - m - 15, height / 2, 7, 0, Math.PI * 2);
         ctx.stroke();
-        // Right 3pt arc
         ctx.beginPath();
         ctx.moveTo(width - m, height / 2 - 110);
         ctx.lineTo(width - m - 30, height / 2 - 110);
@@ -338,7 +336,7 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-950">
+      <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center">
         <canvas
           ref={canvasRef}
           width={width}
