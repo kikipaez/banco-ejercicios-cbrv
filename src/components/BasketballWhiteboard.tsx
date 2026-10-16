@@ -44,24 +44,60 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
       ctx.lineWidth = 2;
 
       if (courtType === "half") {
-        // Half court lines (Vertical orientation relative to basket at top)
-        ctx.strokeRect(50, 20, width - 100, height - 40);
+        const marginX = 80;
+        const topY = 20;
+        const bottomY = height - 20;
+        const courtWidth = width - marginX * 2;
+
+        // Half court outer box (Baseline at top, Sidelines, Half-court line at bottom)
+        ctx.strokeRect(marginX, topY, courtWidth, bottomY - topY);
+
+        const centerX = width / 2;
+        const keyWidth = 120;
+        const keyHeight = 110;
+
+        // Key / Paint (from top baseline downwards)
+        ctx.strokeRect(centerX - keyWidth / 2, topY, keyWidth, keyHeight);
+
+        // Free throw semicircle (facing down into the court)
+        ctx.beginPath();
+        ctx.arc(centerX, topY + keyHeight, 45, 0, Math.PI, false);
+        ctx.stroke();
+
+        // Free throw dashed-style line simulation inside key
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.arc(centerX, topY + keyHeight, 45, Math.PI, 0, false);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
         // 3-point arc
         ctx.beginPath();
-        ctx.arc(width / 2, 20, 140, 0, Math.PI);
+        // Corner straight lines of 3pt line
+        ctx.moveTo(marginX + 20, topY);
+        ctx.lineTo(marginX + 20, topY + 50);
+        ctx.moveTo(width - marginX - 20, topY);
+        ctx.lineTo(width - marginX - 20, topY + 50);
+        // Arc
+        ctx.arc(centerX, topY + 15, 130, 0.15 * Math.PI, 0.85 * Math.PI, false);
         ctx.stroke();
-        // Key / Paint
-        ctx.strokeRect(width / 2 - 45, 20, 90, 130);
-        // Free throw semicircle (solid & dashed simulation)
+
+        // Basket & Backboard
         ctx.beginPath();
-        ctx.arc(width / 2, 150, 40, Math.PI, 0, false);
+        ctx.moveTo(centerX - 25, topY + 10);
+        ctx.lineTo(centerX + 25, topY + 10);
         ctx.stroke();
-        // Basket hoop
+
         ctx.beginPath();
-        ctx.arc(width / 2, 35, 12, 0, Math.PI * 2);
+        ctx.arc(centerX, topY + 25, 10, 0, Math.PI * 2);
         ctx.stroke();
+
+        // Half court line at the bottom with center circle arc snippet
+        ctx.beginPath();
+        ctx.arc(centerX, bottomY, 40, Math.PI, 0, false);
+        ctx.stroke();
+
       } else if (courtType === "full") {
-        // Full court outer boundary (Horizontal orientation)
         const margin = 30;
         ctx.strokeRect(margin, margin, width - margin * 2, height - margin * 2);
 
@@ -77,7 +113,7 @@ export function BasketballWhiteboard({ onSave }: BasketballWhiteboardProps) {
         ctx.stroke();
 
         // Left Key / Paint
-        const keyWidth = 100;
+        const keyWidth = 90;
         const keyHeight = 70;
         ctx.strokeRect(margin, height / 2 - keyHeight / 2, keyWidth, keyHeight);
 
